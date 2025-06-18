@@ -19,7 +19,7 @@
         <!-- Logo da Braspine -->
         <div class="flex justify-center mb-6">
             <img
-                src="https://github.com/DiegoSutil/calculadora-de-lodo/blob/e6af6bb6071166eb8a6dfd01725ad76460471786/images/logo_braspine_horizontal_positivo_cor_rgb.png"
+                src="https://github.com/DiegoSutil/calculadora-de-lodo/blob/e6af6bb6071166eb8a6dfd01725ad76460471786/images/logo_braspine_horizontal_positivo_cor_rgb.png?raw=true"
                 alt="Logo Braspine"
                 class="h-12 object-contain rounded-md"
             />
@@ -28,7 +28,7 @@
             Calculadora de Idade do Lodo
         </h1>
         <h2 class="text-xl text-center text-gray-600 mb-8">
-            Braspine Telêmaco Borba
+            ETE/ETAR
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -137,14 +137,29 @@
                 A Idade do Lodo (ISR) é um parâmetro fundamental no controle de sistemas de lodos ativados,
                 indicando o tempo médio de permanência dos sólidos voláteis no sistema.
             </p>
-            <p class="mt-2">
-                Fórmula utilizada: ISR = (V_tanque_aeracao * SSV_tanque_aeracao) / ((Q_descarte * SSV_descarte) + (Q_efluente * SSV_efluente))
+            <p class="mt-2 font-bold">
+                Fórmula utilizada:
+            </p>
+            <p class="mt-1">
+                ISR = (Massa de SSV no Tanque de Aeração) / (Massa de SSV Removida Diariamente)
+            </p>
+            <p class="mt-1 text-xs text-gray-500">
+                Onde:
+            </p>
+            <p class="mt-1 text-xs text-gray-500">
+                Massa de SSV no Tanque = Volume do Tanque (m³) * SSV do Tanque (mg/L)
+            </p>
+            <p class="mt-1 text-xs text-gray-500">
+                Massa de SSV Removida = (Vazão de Descarte (L/dia) * SSV Descartado (mg/L)) + (Vazão do Efluente (L/dia) * SSV do Efluente (mg/L))
             </p>
             <p class="mt-2 font-bold text-green-700">
                 Dias ideais para a Idade do Lodo: Geralmente entre 5 e 15 dias.
             </p>
             <p class="mt-1 text-xs text-gray-500">
                 (Este valor pode variar dependendo do tipo de processo e da qualidade da água a ser tratada)
+            </p>
+            <p class="mt-4 text-xs text-gray-500">
+                Desenvolvido por Diego Machado Sutil
             </p>
         </div>
     </div>
