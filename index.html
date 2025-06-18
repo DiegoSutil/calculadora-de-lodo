@@ -1,222 +1,232 @@
-import React, { useState } from 'react'; // Correção: '=> {' alterado para 'from 'react';'
-
-// Componente principal da aplicação
-const App = () => {
-    // Estados para armazenar os valores de entrada, pré-preenchidos com os dados fornecidos
-    const [aerationTankVolume, setAerationTankVolume] = useState('200'); // Volume do Tanque de Aeração em m³
-    const [aerationTankVSS, setAerationTankVSS] = useState('5500');     // SSV no Tanque de Aeração em mg/L (média dos tanques de aeração)
-    const [discardFlowRate, setDiscardFlowRate] = useState('1000');       // Vazão de Descarte em L/min (10m³ em 10min = 1000L/min)
-    const [discardVSS, setDiscardVSS] = useState('10500');             // SSV do Lodo Descartado em mg/L (média dos reciclos)
-    const [effluentFlowRate, setEffluentFlowRate] = useState('');     // Vazão do Efluente Final em m³/dia - ESTE CAMPO PRECISA SER PREENCHIDO
-    const [effluentVSS, setEffluentVSS] = useState('20');           // SSV do Efluente Final em mg/L (Decantador secundário)
-    const [sludgeAge, setSludgeAge] = useState(null);               // Resultado da Idade do Lodo
-    const [error, setError] = useState('');                       // Mensagens de erro
-
-    // Função para calcular a idade do lodo
-    const calculateSludgeAge = () => {
-        // Limpar mensagens de erro anteriores
-        setError('');
-        setSludgeAge(null);
-
-        // Validar se todos os campos estão preenchidos e são números válidos
-        const inputs = {
-            aerationTankVolume: parseFloat(aerationTankVolume),
-            aerationTankVSS: parseFloat(aerationTankVSS),
-            discardFlowRate: parseFloat(discardFlowRate),
-            discardVSS: parseFloat(discardVSS),
-            effluentFlowRate: parseFloat(effluentFlowRate),
-            effluentVSS: parseFloat(effluentVSS),
-        };
-
-        for (const key in inputs) {
-            if (isNaN(inputs[key]) || inputs[key] < 0) {
-                setError('Por favor, preencha todos os campos com valores numéricos positivos válidos.');
-                return;
-            }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Idade do Lodo - Braspine Telêmaco Borba</title>
+    <!-- Inclui Tailwind CSS via CDN para estilização rápida e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link para a fonte Inter do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Define a fonte Inter para todo o corpo */
         }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-green-100 to-green-300 flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl border border-gray-200">
+        <!-- Logo da Braspine -->
+        <div class="flex justify-center mb-6">
+            <img
+                src="https://www.braspine.com.br/wp-content/uploads/2019/07/logo-braspine.png"
+                alt="Logo Braspine"
+                class="h-12 object-contain rounded-md"
+            />
+        </div>
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">
+            Calculadora de Idade do Lodo
+        </h1>
+        <h2 class="text-xl text-center text-gray-600 mb-8">
+            Braspine Telêmaco Borba
+        </h2>
 
-        // Converter unidades para cálculos consistentes (todos em Litros e mg)
-        const V_aerationTank_L = inputs.aerationTankVolume * 1000; // m³ para Litros
-        const Q_effluent_L_day = inputs.effluentFlowRate * 1000; // m³/dia para Litros/dia
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Volume do Tanque de Aeração -->
+            <div class="flex flex-col">
+                <label for="aerationTankVolume" class="text-sm font-medium text-gray-700 mb-1">
+                    Volume do Tanque de Aeração (m³)
+                </label>
+                <input
+                    type="number"
+                    id="aerationTankVolume"
+                    class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                    placeholder="Ex: 500"
+                    value="200"
+                />
+            </div>
 
-        // Dados de descarte: 3 descartes por dia, 10 minutos cada
-        const totalDailyDiscardMinutes = 3 * 10; // 30 minutos por dia
-        const Q_discard_L_day = inputs.discardFlowRate * totalDailyDiscardMinutes; // L/min para L/dia
+            <!-- SSV no Tanque de Aeração -->
+            <div class="flex flex-col">
+                <label for="aerationTankVSS" class="text-sm font-medium text-gray-700 mb-1">
+                    SSV no Tanque de Aeração (mg/L)
+                </label>
+                <input
+                    type="number"
+                    id="aerationTankVSS"
+                    class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                    placeholder="Ex: 3000"
+                    value="5500"
+                />
+            </div>
 
-        // Cálculo da massa total de SSV no tanque de aeração (mg)
-        const totalVSSMassAerationTank = V_aerationTank_L * inputs.aerationTankVSS;
+            <!-- Vazão de Descarte -->
+            <div class="flex flex-col">
+                <label for="discardFlowRate" class="text-sm font-medium text-gray-700 mb-1">
+                    Vazão de Descarte (L/min) - (Considerando 3 descartes de 10 min)
+                </label>
+                <input
+                    type="number"
+                    id="discardFlowRate"
+                    class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                    placeholder="Ex: 50"
+                    value="1000"
+                />
+            </div>
 
-        // Cálculo da massa de SSV descartada por dia (mg/dia)
-        const totalVSSMassDiscardedDaily = Q_discard_L_day * inputs.discardVSS;
+            <!-- SSV do Lodo Descartado -->
+            <div class="flex flex-col">
+                <label for="discardVSS" class="text-sm font-medium text-gray-700 mb-1">
+                    SSV do Lodo Descartado (mg/L)
+                </label>
+                <input
+                    type="number"
+                    id="discardVSS"
+                    class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                    placeholder="Ex: 8000"
+                    value="10500"
+                />
+            </div>
 
-        // Cálculo da massa de SSV no efluente por dia (mg/dia)
-        const totalVSSMassInEffluentDaily = Q_effluent_L_day * inputs.effluentVSS;
+            <!-- Vazão do Efluente Final -->
+            <div class="flex flex-col">
+                <label for="effluentFlowRate" class="text-sm font-medium text-gray-700 mb-1">
+                    Vazão do Efluente Final (m³/dia)
+                </label>
+                <input
+                    type="number"
+                    id="effluentFlowRate"
+                    class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                    placeholder="Ex: 400"
+                    value=""
+                />
+            </div>
 
-        // Denominador da fórmula da Idade do Lodo
-        const denominator = totalVSSMassDiscardedDaily + totalVSSMassInEffluentDaily;
-
-        // Prevenir divisão por zero
-        if (denominator === 0) {
-            setError('A soma das massas de SSV descartadas e no efluente é zero. Verifique os valores de entrada.');
-            return;
-        }
-
-        // Cálculo final da Idade do Lodo (dias)
-        const calculatedISR = totalVSSMassAerationTank / denominator;
-        setSludgeAge(calculatedISR.toFixed(2)); // Arredondar para duas casas decimais
-    };
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-green-100 to-green-300 flex items-center justify-center p-4 font-inter">
-            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl border border-gray-200">
-                {/* Logo da Braspine */}
-                <div className="flex justify-center mb-6">
-                    {/* Substitua o src pelo URL do logo da Braspine quando disponível */}
-                    <img
-                        src="https://www.braspine.com.br/wp-content/uploads/2019/07/logo-braspine.png" // URL do logo fornecido
-                        alt="Logo Braspine"
-                        className="h-12 object-contain rounded-md"
-                    />
-                </div>
-                <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-                    Calculadora de Idade do Lodo
-                </h1>
-                <h2 className="text-xl text-center text-gray-600 mb-8">
-                    Braspine Telêmaco Borba
-                </h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    {/* Volume do Tanque de Aeração */}
-                    <div className="flex flex-col">
-                        <label htmlFor="aerationTankVolume" className="text-sm font-medium text-gray-700 mb-1">
-                            Volume do Tanque de Aeração (m³)
-                        </label>
-                        <input
-                            type="number"
-                            id="aerationTankVolume"
-                            value={aerationTankVolume}
-                            onChange={(e) => setAerationTankVolume(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
-                            placeholder="Ex: 500"
-                        />
-                    </div>
-
-                    {/* SSV no Tanque de Aeração */}
-                    <div className="flex flex-col">
-                        <label htmlFor="aerationTankVSS" className="text-sm font-medium text-gray-700 mb-1">
-                            SSV no Tanque de Aeração (mg/L)
-                        </label>
-                        <input
-                            type="number"
-                            id="aerationTankVSS"
-                            value={aerationTankVSS}
-                            onChange={(e) => setAerationTankVSS(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
-                            placeholder="Ex: 3000"
-                        />
-                    </div>
-
-                    {/* Vazão de Descarte */}
-                    <div className="flex flex-col">
-                        <label htmlFor="discardFlowRate" className="text-sm font-medium text-gray-700 mb-1">
-                            Vazão de Descarte (L/min) - (Considerando 3 descartes de 10 min)
-                        </label>
-                        <input
-                            type="number"
-                            id="discardFlowRate"
-                            value={discardFlowRate}
-                            onChange={(e) => setDiscardFlowRate(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
-                            placeholder="Ex: 50"
-                        />
-                    </div>
-
-                    {/* SSV do Lodo Descartado */}
-                    <div className="flex flex-col">
-                        <label htmlFor="discardVSS" className="text-sm font-medium text-gray-700 mb-1">
-                            SSV do Lodo Descartado (mg/L)
-                        </label>
-                        <input
-                            type="number"
-                            id="discardVSS"
-                            value={discardVSS}
-                            onChange={(e) => setDiscardVSS(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
-                            placeholder="Ex: 8000"
-                        />
-                    </div>
-
-                    {/* Vazão do Efluente Final */}
-                    <div className="flex flex-col">
-                        <label htmlFor="effluentFlowRate" className="text-sm font-medium text-gray-700 mb-1">
-                            Vazão do Efluente Final (m³/dia)
-                        </label>
-                        <input
-                            type="number"
-                            id="effluentFlowRate"
-                            value={effluentFlowRate}
-                            onChange={(e) => setEffluentFlowRate(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
-                            placeholder="Ex: 400"
-                        />
-                    </div>
-
-                    {/* SSV do Efluente Final */}
-                    <div className="flex flex-col">
-                        <label htmlFor="effluentVSS" className="text-sm font-medium text-gray-700 mb-1">
-                            SSV do Efluente Final (mg/L)
-                        </label>
-                        <input
-                            type="number"
-                            id="effluentVSS"
-                            value={effluentVSS}
-                            onChange={(e) => setEffluentVSS(e.target.value)}
-                            className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
-                            placeholder="Ex: 20"
-                        />
-                    </div>
-                </div>
-
-                {/* Botão de Cálculo */}
-                <button
-                    onClick={calculateSludgeAge}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105"
-                >
-                    Calcular Idade do Lodo
-                </button>
-
-                {/* Área de Resultado/Erro */}
-                {error && (
-                    <div className="mt-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-center">
-                        {error}
-                    </div>
-                )}
-
-                {sludgeAge !== null && !error && (
-                    <div className="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md text-center">
-                        <h2 className="text-lg font-semibold">Idade do Lodo Calculada:</h2>
-                        <p className="text-2xl font-bold mt-2">{sludgeAge} dias</p>
-                    </div>
-                )}
-
-                <div className="mt-8 text-sm text-gray-600 text-center">
-                    <p>
-                        A Idade do Lodo (ISR) é um parâmetro fundamental no controle de sistemas de lodos ativados,
-                        indicando o tempo médio de permanência dos sólidos voláteis no sistema.
-                    </p>
-                    <p className="mt-2">
-                        Fórmula utilizada: ISR = (V_tanque_aeracao * SSV_tanque_aeracao) / ((Q_descarte * SSV_descarte) + (Q_efluente * SSV_efluente))
-                    </p>
-                    <p className="mt-2 font-bold text-green-700">
-                        Dias ideais para a Idade do Lodo: Geralmente entre 5 e 15 dias.
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                        (Este valor pode variar dependendo do tipo de processo e da qualidade da água a ser tratada)
-                    </p>
-                </div>
+            <!-- SSV do Efluente Final -->
+            <div class="flex flex-col">
+                <label for="effluentVSS" class="text-sm font-medium text-gray-700 mb-1">
+                    SSV do Efluente Final (mg/L)
+                </label>
+                <input
+                    type="number"
+                    id="effluentVSS"
+                    class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                    placeholder="Ex: 20"
+                    value="20"
+                />
             </div>
         </div>
-    );
-};
 
-export default App;
+        <!-- Botão de Cálculo -->
+        <button
+            id="calculateButton"
+            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+        >
+            Calcular Idade do Lodo
+        </button>
+
+        <!-- Área de Resultado/Erro -->
+        <div id="errorDisplay" class="mt-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-center hidden"></div>
+        <div id="resultDisplay" class="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md text-center hidden">
+            <h2 class="text-lg font-semibold">Idade do Lodo Calculada:</h2>
+            <p id="sludgeAgeResult" class="text-2xl font-bold mt-2"></p>
+        </div>
+
+        <div class="mt-8 text-sm text-gray-600 text-center">
+            <p>
+                A Idade do Lodo (ISR) é um parâmetro fundamental no controle de sistemas de lodos ativados,
+                indicando o tempo médio de permanência dos sólidos voláteis no sistema.
+            </p>
+            <p class="mt-2">
+                Fórmula utilizada: ISR = (V_tanque_aeracao * SSV_tanque_aeracao) / ((Q_descarte * SSV_descarte) + (Q_efluente * SSV_efluente))
+            </p>
+            <p class="mt-2 font-bold text-green-700">
+                Dias ideais para a Idade do Lodo: Geralmente entre 5 e 15 dias.
+            </p>
+            <p class="mt-1 text-xs text-gray-500">
+                (Este valor pode variar dependendo do tipo de processo e da qualidade da água a ser tratada)
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Função para calcular a idade do lodo
+        function calculateSludgeAge() {
+            // Obter referências aos elementos de entrada
+            const aerationTankVolumeInput = document.getElementById('aerationTankVolume');
+            const aerationTankVSSInput = document.getElementById('aerationTankVSS');
+            const discardFlowRateInput = document.getElementById('discardFlowRate');
+            const discardVSSInput = document.getElementById('discardVSS');
+            const effluentFlowRateInput = document.getElementById('effluentFlowRate');
+            const effluentVSSInput = document.getElementById('effluentVSS');
+
+            // Obter referências aos elementos de exibição de resultados e erros
+            const errorDisplay = document.getElementById('errorDisplay');
+            const resultDisplay = document.getElementById('resultDisplay');
+            const sludgeAgeResult = document.getElementById('sludgeAgeResult');
+
+            // Limpar mensagens de erro e resultados anteriores
+            errorDisplay.classList.add('hidden');
+            resultDisplay.classList.add('hidden');
+            errorDisplay.textContent = '';
+            sludgeAgeResult.textContent = '';
+
+            // Converter valores de entrada para números
+            const inputs = {
+                aerationTankVolume: parseFloat(aerationTankVolumeInput.value),
+                aerationTankVSS: parseFloat(aerationTankVSSInput.value),
+                discardFlowRate: parseFloat(discardFlowRateInput.value),
+                discardVSS: parseFloat(discardVSSInput.value),
+                effluentFlowRate: parseFloat(effluentFlowRateInput.value),
+                effluentVSS: parseFloat(effluentVSSInput.value),
+            };
+
+            // Validar se todos os campos estão preenchidos e são números válidos
+            for (const key in inputs) {
+                if (isNaN(inputs[key]) || inputs[key] < 0) {
+                    errorDisplay.textContent = 'Por favor, preencha todos os campos com valores numéricos positivos válidos.';
+                    errorDisplay.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            // Converter unidades para cálculos consistentes (todos em Litros e mg)
+            const V_aerationTank_L = inputs.aerationTankVolume * 1000; // m³ para Litros
+            const Q_effluent_L_day = inputs.effluentFlowRate * 1000; // m³/dia para Litros/dia
+
+            // Dados de descarte: 3 descartes por dia, 10 minutos cada
+            const totalDailyDiscardMinutes = 3 * 10; // 30 minutos por dia
+            const Q_discard_L_day = inputs.discardFlowRate * totalDailyDiscardMinutes; // L/min para L/dia
+
+            // Cálculo da massa total de SSV no tanque de aeração (mg)
+            const totalVSSMassAerationTank = V_aerationTank_L * inputs.aerationTankVSS;
+
+            // Cálculo da massa de SSV descartada por dia (mg/dia)
+            const totalVSSMassDiscardedDaily = Q_discard_L_day * inputs.discardVSS;
+
+            // Cálculo da massa de SSV no efluente por dia (mg/dia)
+            const totalVSSMassInEffluentDaily = Q_effluent_L_day * inputs.effluentVSS;
+
+            // Denominador da fórmula da Idade do Lodo
+            const denominator = totalVSSMassDiscardedDaily + totalVSSMassInEffluentDaily;
+
+            // Prevenir divisão por zero
+            if (denominator === 0) {
+                errorDisplay.textContent = 'A soma das massas de SSV descartadas e no efluente é zero. Verifique os valores de entrada.';
+                errorDisplay.classList.remove('hidden');
+                return;
+            }
+
+            // Cálculo final da Idade do Lodo (dias)
+            const calculatedISR = totalVSSMassAerationTank / denominator;
+            sludgeAgeResult.textContent = calculatedISR.toFixed(2) + ' dias'; // Arredondar para duas casas decimais
+            resultDisplay.classList.remove('hidden'); // Exibir o resultado
+        }
+
+        // Adicionar o event listener ao botão de cálculo após o DOM ser carregado
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('calculateButton').addEventListener('click', calculateSludgeAge);
+        });
+    </script>
+</body>
+</html>
