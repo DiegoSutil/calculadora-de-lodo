@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Idade do Lodo - Braspine Telêmaco Borba</title>
+    <title>Calculadora de Idade do Lodo com Análise CSV - Braspine Telêmaco Borba</title>
     <!-- Inclui Tailwind CSS via CDN para estilização rápida e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Link para a fonte Inter do Google Fonts -->
@@ -11,6 +12,15 @@
     <style>
         body {
             font-family: 'Inter', sans-serif; /* Define a fonte Inter para todo o corpo */
+        }
+        .drop-zone {
+            border: 2px dashed #a7f3d0; /* default border */
+            background-color: #f0fdf4; /* default background */
+            transition: all 0.2s ease-in-out;
+        }
+        .drop-zone.drag-over {
+            border-color: #10b981; /* green-500 */
+            background-color: #d1fae5; /* green-100 */
         }
     </style>
 </head>
@@ -28,8 +38,40 @@
             Calculadora de Idade do Lodo
         </h1>
         <h2 class="text-xl text-center text-gray-600 mb-8">
-            ETE/ETAR
+            ETE/ETAR - Braspine Telêmaco Borba
         </h2>
+
+        <!-- Seção de Importação de CSV -->
+        <div id="csvDropZone" class="mb-8 p-6 rounded-lg border border-green-200 drop-zone">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Analisar Dados de Planilha (CSV)</h3>
+            <div class="mb-4 text-sm text-yellow-700 bg-yellow-100 border border-yellow-400 rounded-md p-2 text-center">
+                Atenção: Esta funcionalidade está em desenvolvimento e pode não funcionar corretamente.
+            </div>
+            <label for="csvFile" class="block text-sm font-medium text-gray-700 mb-2">
+                Selecione um arquivo CSV ou arraste-o aqui:
+            </label>
+            <input
+                type="file"
+                id="csvFile"
+                accept=".csv"
+                class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-green-50 file:text-green-700
+                    hover:file:bg-green-100"
+            />
+            <button
+                id="analyzeCsvButton"
+                class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out"
+            >
+                Analisar CSV e Preencher Campos
+            </button>
+            <div id="csvAnalysisStatus" class="mt-2 text-sm text-center text-gray-600"></div>
+            <div id="csvTableDisplay" class="mt-4 max-h-48 overflow-auto border border-gray-300 rounded-md">
+                <!-- Tabela CSV será exibida aqui -->
+            </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <!-- Volume do Tanque de Aeração -->
@@ -42,7 +84,7 @@
                     id="aerationTankVolume"
                     class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
                     placeholder="Ex: 500"
-                    value="200"
+                    value=""
                 />
             </div>
 
@@ -56,7 +98,7 @@
                     id="aerationTankVSS"
                     class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
                     placeholder="Ex: 3000"
-                    value="5500"
+                    value=""
                 />
             </div>
 
@@ -70,7 +112,7 @@
                     id="discardFlowRate"
                     class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
                     placeholder="Ex: 50"
-                    value="1000"
+                    value=""
                 />
             </div>
 
@@ -84,7 +126,7 @@
                     id="discardVSS"
                     class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
                     placeholder="Ex: 8000"
-                    value="10500"
+                    value=""
                 />
             </div>
 
@@ -112,7 +154,7 @@
                     id="effluentVSS"
                     class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
                     placeholder="Ex: 20"
-                    value="20"
+                    value=""
                 />
             </div>
         </div>
@@ -238,8 +280,191 @@
             resultDisplay.classList.remove('hidden'); // Exibir o resultado
         }
 
-        // Adicionar o event listener ao botão de cálculo após o DOM ser carregado
+        // Função para parsear CSV e preencher campos
+        function parseCSVAndFillFields(file) {
+            const statusDisplay = document.getElementById('csvAnalysisStatus');
+            const tableDisplay = document.getElementById('csvTableDisplay');
+
+            statusDisplay.textContent = ''; // Limpar status anterior
+            tableDisplay.innerHTML = ''; // Limpar tabela anterior
+
+            // Limpar os campos de entrada ao carregar um CSV
+            document.getElementById('aerationTankVolume').value = '';
+            document.getElementById('aerationTankVSS').value = '';
+            document.getElementById('discardFlowRate').value = '';
+            document.getElementById('discardVSS').value = '';
+            document.getElementById('effluentFlowRate').value = '';
+            document.getElementById('effluentVSS').value = '';
+
+
+            if (!file) {
+                statusDisplay.textContent = 'Nenhum arquivo selecionado.';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                // Dividir linhas e remover linhas vazias
+                const lines = text.split(/\r\n|\n/).map(line => line.trim()).filter(line => line.length > 0);
+
+                if (lines.length === 0) {
+                    statusDisplay.textContent = 'Arquivo CSV vazio ou ilegível.';
+                    return;
+                }
+
+                // Usar ponto e vírgula como delimitador
+                const headers = lines[0].split(';').map(h => h.trim());
+                const dataRows = lines.slice(1);
+
+                // Exibir dados do CSV em uma tabela simples
+                let tableHtml = '<table class="min-w-full divide-y divide-gray-200"><thead><tr>';
+                headers.forEach(header => {
+                    tableHtml += `<th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${header}</th>`;
+                });
+                tableHtml += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+                dataRows.forEach(row => {
+                    const values = row.split(';').map(v => v.trim()); // Usar ponto e vírgula
+                    tableHtml += '<tr>';
+                    values.forEach(value => {
+                        tableHtml += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${value}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                });
+                tableHtml += '</tbody></table>';
+                tableDisplay.innerHTML = tableHtml;
+
+                // Extrair valores para os campos da calculadora
+                let aerationTankVSSValues = [];
+                let discardVSSValues = [];
+                let effluentVSSValue = null;
+
+                const tanqueIndex = headers.indexOf('Tanque');
+                const solidosVolateisIndex = headers.indexOf('Sólidos Voláteis mg/l');
+
+                if (tanqueIndex === -1 || solidosVolateisIndex === -1) {
+                    statusDisplay.textContent = 'CSV inválido: colunas "Tanque" ou "Sólidos Voláteis mg/l" não encontradas. Verifique os cabeçalhos.';
+                    return;
+                }
+
+                dataRows.forEach((row, rowIndex) => {
+                    const values = row.split(';').map(v => v.trim()); // Usar ponto e vírgula
+                    if (values.length <= Math.max(tanqueIndex, solidosVolateisIndex)) {
+                        console.warn(`Linha ${rowIndex + 2} ignorada devido a colunas insuficientes: "${row}"`);
+                        return; // Pular linhas malformadas
+                    }
+
+                    const tanque = values[tanqueIndex];
+                    // Substituir vírgula por ponto para parsear decimais, mesmo que o delimitador seja ponto e vírgula.
+                    // Isso é para lidar com números como "1.234,56" que podem ser "1234.56" após o replace.
+                    const ssvString = values[solidosVolateisIndex].replace(',', '.');
+                    const ssv = parseFloat(ssvString);
+
+                    if (isNaN(ssv)) {
+                        console.warn(`Linha ${rowIndex + 2}: Valor de SSV inválido "${values[solidosVolateisIndex]}" para o tanque "${tanque}".`);
+                        return; // Pular se SSV não for um número
+                    }
+
+                    // Tentar identificar e preencher os campos com base nos termos da planilha padrão
+                    if (tanque && tanque.includes('Tanque de aeração')) {
+                        aerationTankVSSValues.push(ssv);
+                    } else if (tanque && tanque.includes('Reciclo')) {
+                        discardVSSValues.push(ssv);
+                    } else if (tanque && tanque.includes('Decantador secundário')) {
+                        effluentVSSValue = ssv;
+                    }
+                });
+
+                let warnings = [];
+
+                if (aerationTankVSSValues.length > 0) {
+                    const avgAerationTankVSS = aerationTankVSSValues.reduce((sum, val) => sum + val, 0) / aerationTankVSSValues.length;
+                    document.getElementById('aerationTankVSS').value = avgAerationTankVSS.toFixed(2);
+                } else {
+                    warnings.push(' "SSV no Tanque de Aeração" não encontrado ou inválido no CSV.');
+                }
+
+                if (discardVSSValues.length > 0) {
+                    const avgDiscardVSS = discardVSSValues.reduce((sum, val) => sum + val, 0) / discardVSSValues.length;
+                    document.getElementById('discardVSS').value = avgDiscardVSS.toFixed(2);
+                } else {
+                    warnings.push(' "SSV do Lodo Descartado" (Reciclo) não encontrado ou inválido no CSV.');
+                }
+
+                if (effluentVSSValue !== null) {
+                    document.getElementById('effluentVSS').value = effluentVSSValue.toFixed(2);
+                } else {
+                    warnings.push(' "SSV do Efluente Final" (Decantador secundário) não encontrado ou inválido no CSV.');
+                }
+
+                if (warnings.length > 0) {
+                    statusDisplay.textContent = 'Análise do CSV concluída com avisos: ' + warnings.join('');
+                } else {
+                    statusDisplay.textContent = 'Dados do CSV analisados e campos preenchidos com sucesso!';
+                }
+            };
+
+            reader.onerror = function() {
+                statusDisplay.textContent = 'Erro ao ler o arquivo CSV. Verifique o formato e o delimitador (ponto e vírgula).';
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Adicionar event listeners para o Drag and Drop
         document.addEventListener('DOMContentLoaded', () => {
+            const csvDropZone = document.getElementById('csvDropZone');
+            const csvFileInput = document.getElementById('csvFile');
+            const analyzeCsvButton = document.getElementById('analyzeCsvButton');
+
+            // Limpar os campos de entrada ao carregar a página
+            document.getElementById('aerationTankVolume').value = '';
+            document.getElementById('aerationTankVSS').value = '';
+            document.getElementById('discardFlowRate').value = '';
+            document.getElementById('discardVSS').value = '';
+            document.getElementById('effluentFlowRate').value = '';
+            document.getElementById('effluentVSS').value = '';
+
+            // Evento de clique no botão de análise
+            analyzeCsvButton.addEventListener('click', () => {
+                if (csvFileInput.files.length > 0) {
+                    parseCSVAndFillFields(csvFileInput.files[0]);
+                } else {
+                    document.getElementById('csvAnalysisStatus').textContent = 'Por favor, selecione um arquivo CSV primeiro ou arraste-o.';
+                }
+            });
+
+            // Eventos para Drag and Drop
+            csvDropZone.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Necessário para permitir o drop
+                csvDropZone.classList.add('drag-over');
+            });
+
+            csvDropZone.addEventListener('dragleave', () => {
+                csvDropZone.classList.remove('drag-over');
+            });
+
+            csvDropZone.addEventListener('drop', (e) => {
+                e.preventDefault(); // Previne que o navegador abra o arquivo
+                csvDropZone.classList.remove('drag-over');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type === 'text/csv') {
+                    csvFileInput.files = files; // Atribui o arquivo arrastado ao input de arquivo
+                    parseCSVAndFillFields(files[0]);
+                } else {
+                    document.getElementById('csvAnalysisStatus').textContent = 'Por favor, arraste um arquivo CSV válido.';
+                }
+            });
+
+            // Evento para quando o input de arquivo é alterado (seleção manual)
+            csvFileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    parseCSVAndFillFields(e.target.files[0]);
+                }
+            });
+
+            // Adicionar o event listener ao botão de cálculo
             document.getElementById('calculateButton').addEventListener('click', calculateSludgeAge);
         });
     </script>
