@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Idade do Lodo / Eficiência Físico-Química - Braspine Telêmaco Borba</title>
+    <!-- Inclui Tailwind CSS via CDN para estilização rápida e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link para a fonte Inter do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Link para o ficheiro CSS externo -->
+    <link rel="stylesheet" href="style.css">
+    <!-- O script.js será carregado como um módulo, lidando com imports do Firebase internamente -->
+</head>
+<body class="min-h-screen bg-gradient-to-br from-green-100 to-green-300 flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-4xl border border-gray-200">
+        <!-- Logo da Braspine -->
+        <div class="flex justify-center mb-6">
+            <img
+                src="https://github.com/DiegoSutil/calculadora-de-lodo/blob/e6af6bb6071166eb8a6dfd01725ad76460471786/images/logo_braspine_horizontal_positivo_cor_rgb.png?raw=true"
+                alt="Logo Braspine"
+                class="h-12 object-contain rounded-md"
+            />
+        </div>
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">
+            Ferramentas de Análise ETE/ETAR
+        </h1>
+        <h2 class="text-xl text-center text-gray-600 mb-8">
+            <!-- Removido: Braspine Telêmaco Borba -->
+        </h2>
+
+        <!-- ID do Usuário -->
+        <div id="userIdDisplay" class="text-center text-sm text-gray-500 mb-4 break-words">
+            Carregando ID do Usuário...
+        </div>
+
+        <!-- Botões de Navegação -->
+        <div class="flex justify-center flex-wrap gap-4 mb-8">
+            <button
+                id="showSludgeAge"
+                class="px-4 py-2 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+            >
+                Calculadora Idade do Lodo
+            </button>
+            <button
+                id="showPhysicalChemical"
+                class="px-4 py-2 rounded-lg font-bold text-green-800 bg-green-200 hover:bg-green-300 shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+            >
+                Eficiência Físico-Química
+            </button>
+            <button
+                id="showOrganicLoad"
+                class="px-4 py-2 rounded-lg font-bold text-green-800 bg-green-200 hover:bg-green-300 shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+            >
+                Carga Orgânica (DBO/DQO)
+            </button>
+            <button
+                id="showHowItWorks"
+                class="px-4 py-2 rounded-lg font-bold text-green-800 bg-green-200 hover:bg-green-300 shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+            >
+                Como Funciona
+            </button>
+        </div>
+
+        <!-- Seção da Calculadora de Idade do Lodo -->
+        <div id="sludgeAgeSection" class="">
+            <!-- Seção de Importação de CSV -->
+            <div id="csvDropZone" class="mb-8 p-6 rounded-lg border border-green-200 drop-zone">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Analisar Dados de Planilha (CSV)</h3>
+                <div class="mb-4 text-sm text-yellow-700 bg-yellow-100 border border-yellow-400 rounded-md p-2 text-center">
+                    Atenção: Esta funcionalidade está em desenvolvimento e pode não funcionar corretamente.
+                </div>
+                <label for="csvFile" class="block text-sm font-medium text-gray-700 mb-2">
+                    Selecione um arquivo CSV ou arraste-o aqui:
+                </label>
+                <input
+                    type="file"
+                    id="csvFile"
+                    accept=".csv"
+                    class="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-green-50 file:text-green-700
+                        hover:file:bg-green-100"
+                />
+                <button
+                    id="analyzeCsvButton"
+                    class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out"
+                >
+                    Analisar CSV e Preencher Campos
+                </button>
+                <div id="csvAnalysisStatus" class="mt-2 text-sm text-center text-gray-600"></div>
+                <div id="csvTableDisplay" class="mt-4 max-h-48 overflow-auto border border-gray-300 rounded-md">
+                    <!-- Tabela CSV será exibida aqui -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Volume do Tanque de Aeração -->
+                <div class="flex flex-col">
+                    <label for="aerationTankVolume">
+                        Volume do Tanque de Aeração (m³)
+                    </label>
+                    <input
+                        type="number"
+                        id="aerationTankVolume"
+                        placeholder="Ex: 500"
+                        value=""
+                    />
+                </div>
+
+                <!-- SSV no Tanque de Aeração -->
+                <div class="flex flex-col">
+                    <label for="aerationTankVSS">
+                        SSV no Tanque de Aeração (mg/L)
+                    </label>
+                    <input
+                        type="number"
+                        id="aerationTankVSS"
+                        placeholder="Ex: 3000"
+                        value=""
+                    />
+                </div>
+
+                <!-- Vazão de Descarte -->
+                <div class="flex flex-col">
+                    <label for="discardFlowRate">
+                        Vazão de Descarte (L/min)
+                    </label>
+                    <input
+                        type="number"
+                        id="discardFlowRate"
+                        class="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out text-gray-800"
+                        placeholder="Ex: 50"
+                        value=""
+                    />
+                </div>
+
+                <!-- SSV do Lodo Descartado -->
+                <div class="flex flex-col">
+                    <label for="discardVSS">
+                        SSV do Lodo Descartado (mg/L)
+                    </label>
+                    <input
+                        type="number"
+                        id="discardVSS"
+                        placeholder="Ex: 8000"
+                        value=""
+                    />
+                </div>
+
+                <!-- Vazão do Efluente Final -->
+                <div class="flex flex-col">
+                    <label for="effluentFlowRate">
+                        Vazão do Efluente Final (m³/dia)
+                    </label>
+                    <input
+                        type="number"
+                        id="effluentFlowRate"
+                        placeholder="Ex: 400"
+                        value=""
+                    />
+                </div>
+
+                <!-- SSV do Efluente Final -->
+                <div class="flex flex-col">
+                    <label for="effluentVSS">
+                        SSV do Efluente Final (mg/L)
+                    </label>
+                    <input
+                        type="number"
+                        id="effluentVSS"
+                        placeholder="Ex: 20"
+                        value=""
+                    />
+                </div>
+            </div>
+
+            <!-- Botão de Cálculo -->
+            <button
+                id="calculateButton"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+            >
+                Calcular Idade do Lodo
+            </button>
+            <button
+                id="saveSludgeAgeData"
+                class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+            >
+                Salvar Resultado
+            </button>
+
+            <!-- Área de Resultado/Erro -->
+            <div id="errorDisplay" class="mt-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-center hidden"></div>
+            <div id="resultDisplay" class="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md text-center hidden">
+                <h2 class="text-lg font-semibold">Idade do Lodo Calculada:</h2>
+                <p id="sludgeAgeResult" class="text-2xl font-bold mt-2"></p>
+            </div>
+
+            <div class="mt-8 text-sm text-gray-600 text-center">
+                <p>
+                    A Idade do Lodo (ISR) é um parâmetro fundamental no controle de sistemas de lodos ativados,
+                    indicando o tempo médio de permanência dos sólidos voláteis no sistema.
+                </p>
+                <p class="mt-2 font-bold">
+                    Fórmula utilizada:
+                </p>
+                <p class="mt-1">
+                    ISR = (Massa de SSV no Tanque de Aeração) / (Massa de SSV Removida Diariamente)
+                </p>
+                <p class="mt-1 text-xs text-gray-500">
+                    Onde:
+                </p>
+                <p class="mt-1 text-xs text-gray-500">
+                    Massa de SSV no Tanque = Volume do Tanque (m³) * SSV do Tanque (mg/L)
+                </p>
+                <p class="mt-1 text-xs text-gray-500">
+                    Massa de SSV Removida = (Vazão de Descarte (L/dia) * SSV Descartado (mg/L)) + (Vazão do Efluente (L/dia) * SSV do Efluente (mg/L))
+                </p>
+                <p class="mt-2 font-bold text-green-700">
+                    Dias ideais para a Idade do Lodo: Geralmente entre 5 e 15 dias.
+                </p>
+                <p class="mt-1 text-xs text-gray-500">
+                    (Este valor pode variar dependendo do tipo de processo e da qualidade da água a ser tratada)
+                </p>
+                <p class="mt-4 text-xs text-gray-500">
+                    Desenvolvido por Diego Machado Sutil
+                </p>
+            </div>
+
+            <!-- Histórico da Calculadora Idade do Lodo -->
+            <div class="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Histórico de Cálculos da Idade do Lodo</h3>
+                <div id="sludgeAgeHistory" class="overflow-x-auto">
+                    <!-- Histórico será carregado aqui -->
+                    <p class="text-center text-gray-500">Carregando histórico...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Eficiência Físico-Química -->
+        <div id="physicalChemicalSection" class="hidden-section">
+            <h3 class="text-2xl font-bold text-center text-gray-800 mb-8">
+                Eficiência Físico-Química
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="flex flex-col">
+                    <label for="phyChemInitialTurbidity">Turbidez Inicial (NTU):</label>
+                    <input type="number" id="phyChemInitialTurbidity" placeholder="Ex: 100">
+                </div>
+                <div class="flex flex-col">
+                    <label for="phyChemFinalTurbidity">Turbidez Final (NTU):</label>
+                    <input type="number" id="phyChemFinalTurbidity" placeholder="Ex: 5">
+                </div>
+                <div class="flex flex-col">
+                    <label for="phyChemInitialColor">Cor Inicial (UH):</label>
+                    <input type="number" id="phyChemInitialColor" placeholder="Ex: 50">
+                </div>
+                <div class="flex flex-col">
+                    <label for="phyChemFinalColor">Cor Final (UH):</label>
+                    <input type="number" id="phyChemFinalColor" placeholder="Ex: 2">
+                </div>
+                <div class="flex flex-col">
+                    <label for="phyChemIdealDosage">Dosagem Ideal (Jar Test):</label>
+                    <input type="number" id="phyChemIdealDosage" placeholder="Ex: 20">
+                </div>
+                <div class="flex flex-col">
+                    <label for="phyChemDosageUnit">Unidade de Dosagem:</label>
+                    <select id="phyChemDosageUnit">
+                        <option value="mg/L">mg/L</option>
+                        <option value="mL/L">mL/L</option>
+                    </select>
+                </div>
+                <div class="flex flex-col md:col-span-2">
+                    <label for="phyChemEtaFlowRate">Vazão da ETA (m³/dia):</label>
+                    <input type="number" id="phyChemEtaFlowRate" placeholder="Ex: 5000">
+                </div>
+            </div>
+
+            <button id="calculatePhysicalChemical" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
+                Calcular Eficiência Físico-Química
+            </button>
+            <button
+                id="savePhysicalChemicalData"
+                class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+            >
+                Salvar Resultado
+            </button>
+
+            <div id="phyChemErrorDisplay" class="mt-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-center hidden"></div>
+            <div id="phyChemResultDisplay" class="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md text-center hidden">
+                <h4 class="text-lg font-semibold mb-2">Resultados:</h4>
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                        <strong class="text-gray-700">Eficiência de Remoção (Turbidez):</strong>
+                        <span id="phyChemTurbidityEfficiency" class="font-semibold text-green-700">-- %</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                        <strong class="text-gray-700">Eficiência de Remoção (Cor):</strong>
+                        <span id="phyChemColorEfficiency" class="font-semibold text-green-700">-- %</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                        <strong class="text-gray-700">Dosagem Diária (Produto Químico):</strong>
+                        <span id="phyChemDailyDosage" class="font-semibold text-green-700">--</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 text-sm text-gray-600 text-center">
+                <p>
+                    Esta calculadora auxilia na determinação da eficiência de remoção de turbidez e cor,
+                    além da dosagem diária de coagulante/floculante necessária para a sua Estação de Tratamento de Água (ETA).
+                </p>
+                <p class="mt-4 text-xs text-gray-500">
+                    Desenvolvido por Diego Machado Sutil
+                </p>
+            </div>
+
+            <!-- Histórico da Calculadora Eficiência Físico-Química -->
+            <div class="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Histórico de Cálculos de Eficiência Físico-Química</h3>
+                <div id="physicalChemicalHistory" class="overflow-x-auto">
+                    <!-- Histórico será carregado aqui -->
+                    <p class="text-center text-gray-500">Carregando histórico...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nova Seção: Cálculo de Carga Orgânica (DBO/DQO) -->
+        <div id="organicLoadSection" class="hidden-section">
+            <h3 class="text-2xl font-bold text-center text-gray-800 mb-8">
+                Cálculo de Carga Orgânica (DBO/DQO)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="flex flex-col">
+                    <label for="organicInfluentConcentration">Concentração Influent (mg/L DBO ou DQO):</label>
+                    <input type="number" id="organicInfluentConcentration" placeholder="Ex: 300">
+                </div>
+                <div class="flex flex-col">
+                    <label for="organicEffluentConcentration">Concentração Efluente (mg/L DBO ou DQO):</label>
+                    <input type="number" id="organicEffluentConcentration" placeholder="Ex: 50">
+                </div>
+                <div class="flex flex-col md:col-span-2">
+                    <label for="organicLoadFlowRate">Vazão (m³/dia):</label>
+                    <input type="number" id="organicLoadFlowRate" placeholder="Ex: 5000">
+                </div>
+            </div>
+
+            <button id="calculateOrganicLoadButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
+                Calcular Carga Orgânica e Eficiência
+            </button>
+            <button
+                id="saveOrganicLoadData"
+                class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105"
+            >
+                Salvar Resultado
+            </button>
+
+            <div id="organicLoadErrorDisplay" class="mt-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-center hidden"></div>
+            <div id="organicLoadResultDisplay" class="mt-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md text-center hidden">
+                <h4 class="text-lg font-semibold mb-2">Resultados:</h4>
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                        <strong class="text-gray-700">Carga Orgânica Afluente:</strong>
+                        <span id="influentOrganicLoadResult" class="font-semibold text-green-700">-- kg/dia</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                        <strong class="text-gray-700">Carga Orgânica Efluente:</strong>
+                        <span id="effluentOrganicLoadResult" class="font-semibold text-green-700">-- kg/dia</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                        <strong class="text-gray-700">Eficiência de Remoção (Carga Orgânica):</strong>
+                        <span id="organicLoadEfficiencyResult" class="font-semibold text-green-700">-- %</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 text-sm text-gray-600 text-center">
+                <p>
+                    Este cálculo determina a carga orgânica diária (DBO ou DQO) que entra e sai da estação,
+                    além da eficiência do processo de tratamento na remoção dessa carga.
+                </p>
+                <p class="mt-2 font-bold">
+                    Fórmulas utilizadas:
+                </p>
+                <p class="mt-1">
+                    Carga (kg/dia) = $\frac{{\text{Concentração (mg/L)} \times \text{Vazão (m³/dia)}}}{{1000}}$
+                </p>
+                <p class="mt-1">
+                    Eficiência de Remoção (%) = $\frac{{(\text{Carga Afluente} - \text{Carga Efluente})}}{{\text{Carga Afluente}}} \times 100$
+                </p>
+                <p class="mt-4 text-xs text-gray-500">
+                    Desenvolvido por Diego Machado Sutil
+                </p>
+            </div>
+
+            <!-- Histórico da Calculadora Carga Orgânica -->
+            <div class="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Histórico de Cálculos de Carga Orgânica</h3>
+                <div id="organicLoadHistory" class="overflow-x-auto">
+                    <!-- Histórico será carregado aqui -->
+                    <p class="text-center text-gray-500">Carregando histórico...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nova Seção: Como Funciona -->
+        <div id="howItWorksSection" class="hidden-section">
+            <h3 class="text-2xl font-bold text-center text-gray-800 mb-8">
+                Como Funciona
+            </h3>
+            <div class="text-base text-gray-700 space-y-4">
+                <p class="mb-4">
+                    Esta aplicação centraliza três calculadoras essenciais para o controle operacional de uma Estação de Tratamento de Efluentes (ETE) ou Estação de Tratamento de Águas Residuais (ETAR).
+                </p>
+
+                <h4 class="text-xl font-semibold text-gray-800 mb-2">Navegação entre Calculadoras</h4>
+                <p class="mb-4">
+                    No topo da interface, logo abaixo do título principal, você encontrará botões de navegação para cada calculadora e esta seção:
+                </p>
+                <ul class="list-disc list-inside ml-4 mb-4 space-y-1">
+                    <li><strong>Calculadora Idade do Lodo</strong></li>
+                    <li><strong>Eficiência Físico-Química</strong></li>
+                    <li><strong>Carga Orgânica (DBO/DQO)</strong></li>
+                    <li><strong>Como Funciona</strong> (Esta aba!)</li>
+                </ul>
+                <p class="mb-4">
+                    Ao clicar em um desses botões, a seção correspondente da calculadora será exibida, enquanto as outras serão ocultadas. O botão da calculadora ativa ficará com um fundo verde escuro e texto branco, facilitando a identificação da seção em uso.
+                </p>
+
+                <h4 class="text-xl font-semibold text-gray-800 mb-2">1. Calculadora Idade do Lodo</h4>
+                <p>Esta seção permite calcular a Idade do Lodo (ISR), um parâmetro crucial para o controle de sistemas de lodos ativados.</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li><strong>Finalidade:</strong> Determina o tempo médio de permanência dos sólidos voláteis no sistema de aeração.</li>
+                    <li><strong>Campos de Entrada:</strong>
+                        <ul class="list-disc list-inside ml-6 space-y-0.5">
+                            <li><strong>Volume do Tanque de Aeração (m³):</strong> O volume total do reator biológico.</li>
+                            <li><strong>SSV no Tanque de Aeração (mg/L):</strong> A concentração de Sólidos Suspensos Voláteis dentro do tanque de aeração.</li>
+                            <li><strong>Vazão de Descarte (L/min):</strong> A vazão contínua com que o lodo é descartado do sistema.</li>
+                            <li><strong>SSV do Lodo Descartado (mg/L):</strong> A concentração de Sólidos Suspensos Voláteis no lodo que é descartado.</li>
+                            <li><strong>Vazão do Efluente Final (m³/dia):</strong> A vazão de saída do efluente tratado da estação.</li>
+                            <li><strong>SSV do Efluente Final (mg/L):</strong> A concentração de Sólidos Suspensos Voláteis no efluente final.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Funcionalidade de Importação de CSV:</strong>
+                        <ul class="list-disc list-inside ml-6 space-y-0.5">
+                            <li>Você pode arrastar e soltar um arquivo <code>.csv</code> na área designada ou clicar em "Selecione um arquivo CSV".</li>
+                            <li>Ao clicar em "Analisar CSV e Preencher Campos", a calculadora tentará ler o CSV e preencher automaticamente os campos de SSV.</li>
+                            <li><strong>Formato Esperado do CSV:</strong> A calculadora procura por colunas com os cabeçalhos <strong>"Tanque"</strong> e <strong>"Sólidos Voláteis mg/l"</strong>. Ela tentará identificar os valores de SSV com base no conteúdo da coluna "Tanque":
+                                <ul class="list-disc list-inside ml-8 space-y-0.5">
+                                    <li><code>Tanque de aeração</code> para "SSV no Tanque de Aeração".</li>
+                                    <li><code>Reciclo</code> para "SSV do Lodo Descartado".</li>
+                                    <li><code>Decantador secundário</code> para "SSV do Efluente Final".</li>
+                                </ul>
+                            </li>
+                            <li><strong>Observação:</strong> A funcionalidade de CSV está em desenvolvimento, portanto, pode haver variações e a necessidade de ajustar o formato do seu arquivo para que seja lido corretamente (o delimitador esperado é ponto e vírgula <code>;</code> e decimais com vírgula <code>,</code>).</li>
+                        </ul>
+                    </li>
+                    <li><strong>Cálculo:</strong> Ao clicar em "Calcular Idade do Lodo", a aplicação usa as informações fornecidas para calcular:
+                        <ul class="list-disc list-inside ml-6 space-y-0.5">
+                            <li>Massa de SSV no Tanque (mg) = Volume do Tanque (L) * SSV do Tanque (mg/L)</li>
+                            <li>Massa de SSV Removida Diariamente (mg/dia) = (Vazão de Descarte (L/dia) * SSV Descartado (mg/L)) + (Vazão do Efluente (L/dia) * SSV do Efluente (mg/L))</li>
+                            <li><strong>ISR (dias) = (Massa de SSV no Tanque de Aeração) / (Massa de SSV Removida Diariamente)</strong></li>
+                        </ul>
+                    </li>
+                    <li><strong>Resultado:</strong> A Idade do Lodo calculada é exibida em "dias".</li>
+                </ul>
+
+                <h4 class="text-xl font-semibold text-gray-800 mb-2 mt-6">2. Eficiência Físico-Química</h4>
+                <p>Esta seção é baseada na sua calculadora anterior de Jar Test e ajuda a avaliar a eficácia do tratamento físico-químico.</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li><strong>Finalidade:</strong> Calcula a eficiência de remoção de turbidez e cor, e a dosagem diária de produto químico necessária.</li>
+                    <li><strong>Campos de Entrada:</strong>
+                        <ul class="list-disc list-inside ml-6 space-y-0.5">
+                            <li><strong>Turbidez Inicial (NTU):</strong> Turbidez da água antes do tratamento.</li>
+                            <li><strong>Turbidez Final (NTU):</strong> Turbidez da água após o tratamento.</li>
+                            <li><strong>Cor Inicial (UH):</strong> Cor da água antes do tratamento.</li>
+                            <li><strong>Cor Final (UH):</strong> Cor da água após o tratamento.</li>
+                            <li><strong>Dosagem Ideal (Jar Test):</strong> A dosagem de coagulante/floculante determinada em testes de laboratório (com opção de mg/L ou mL/L).</li>
+                            <li><strong>Vazão da ETA (m³/dia):</strong> A vazão média da Estação de Tratamento de Água/Efluentes.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Cálculo:</strong> Ao clicar em "Calcular Eficiência Físico-Química", a aplicação calcula:
+                        <ul class="list-disc list-inside ml-6 space-y-0.5">
+                            <li><strong>Eficiência de Remoção (%) = ((Valor Inicial - Valor Final) / Valor Inicial) * 100</strong>
+                                <ul class="list-disc list-inside ml-8 space-y-0.5">
+                                    <li>Aplicado para Turbidez e Cor.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Dosagem Diária (Produto Químico):</strong> Baseado na dosagem ideal do Jar Test e na vazão da ETA.
+                                <ul class="list-disc list-inside ml-8 space-y-0.5">
+                                    <li>Se mg/L: (Dosagem Ideal * Vazão da ETA) / 1000 (resultado em kg/dia).</li>
+                                    <li>Se mL/L: (Dosagem Ideal * Vazão da ETA) (resultado em L/dia).</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li><strong>Resultados:</strong> Exibe a eficiência de remoção para turbidez e cor, e a dosagem diária do produto químico.</li>
+                </ul>
+
+                <h4 class="text-xl font-semibold text-gray-800 mb-2 mt-6">3. Carga Orgânica (DBO/DQO)</h4>
+                <p>Esta é a seção mais recente, focada na avaliação da carga orgânica que entra e sai da estação.</p>
+                <ul class="list-disc list-inside ml-4 space-y-1">
+                    <li><strong>Finalidade:</strong> Calcula a carga orgânica afluente e efluente (em kg/dia) e a eficiência de remoção.</li>
+                    <li><strong>Campos de Entrada:</strong>
+                        <ul class="list-disc list-inside ml-6 space-y-0.5">
+                            <li><strong>Concentração Influent (mg/L DBO ou DQO):</strong> Concentração da matéria orgânica na entrada da ETE/ETAR.</li>
+                            <li><strong>Concentração Efluente (mg/L DBO ou DQO):</strong> Concentração da matéria orgânica na saída da ETE/ETAR.</li>
+                            <li><strong>Vazão (m³/dia):</strong> A vazão de efluente da estação.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Cálculo:</strong> Ao clicar em "Calcular Carga Orgânica e Eficiência", a aplicação calcula:
+                        <ul class="list-disc list-inside ml-6 space-y-0.5">
+                            <li><strong>Carga (kg/dia) = (Concentração (mg/L) * Vazão (m³/dia)) / 1000</strong>
+                                <ul class="list-disc list-inside ml-8 space-y-0.5">
+                                    <li>Aplicado para a carga afluente e efluente.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Eficiência de Remoção (%) = ((Carga Afluente - Carga Efluente) / Carga Afluente) * 100</strong></li>
+                        </ul>
+                    </li>
+                    <li><strong>Resultados:</strong> Exibe a carga orgânica afluente, a carga orgânica efluente (ambas em kg/dia) e a eficiência de remoção percentual.</li>
+                </ul>
+
+                <h4 class="text-xl font-semibold text-gray-800 mb-2 mt-6">Como Usar Geralmente:</h4>
+                <ol class="list-decimal list-inside ml-4 space-y-1">
+                    <li><strong>Preencha os Campos:</strong> Insira os valores numéricos nos campos de entrada da calculadora que você deseja usar.</li>
+                    <li><strong>Validação:</strong> A calculadora verificará se os valores são válidos e positivos. Se houver algum erro (ex: campo vazio, valor negativo), uma mensagem de erro será exibida.</li>
+                    <li><strong>Calcular:</strong> Clique no botão "Calcular" da respectiva seção para ver os resultados.</li>
+                    <li><strong>Salvar Resultado:</strong> Após calcular, clique no botão "Salvar Resultado" para persistir os dados no banco de dados.</li>
+                    <li><strong>Histórico:</strong> A seção de "Histórico de Cálculos" exibirá os registros salvos, permitindo carregar ou excluir entradas.</li>
+                    <li><strong>Limpar:</strong> Os campos são limpos automaticamente ao carregar a página para uma nova análise.</li>
+                </ol>
+                <p class="mt-4 text-xs text-gray-500 text-center">
+                    Desenvolvido por Diego Machado Sutil
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link para o ficheiro JavaScript externo -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
